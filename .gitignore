@@ -56,3 +56,5 @@ producer/producer
 consumer/consumer
 creator/creator
 killer/killer
+
+*.DS_Store
