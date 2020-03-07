@@ -55,7 +55,7 @@ size_t circular_buf_capacity(cbuf_handle_t cbuf);
 
 /// Check the number of elements stored in the buffer
 /// Requires: cbuf is valid and created by circular_buf_init
-/// Returns the current number of elements in the buffer
+
 size_t circular_buf_size(cbuf_handle_t cbuf);
 
 //TODO: int circular_buf_get_range(circular_buf_t cbuf, uint8_t *data, size_t len);
