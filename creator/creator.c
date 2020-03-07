@@ -25,16 +25,25 @@ int main(int argc, char *argv[]) {
 
     printf("Creador... \n");
 
-    //buffer size
+    //buffer size.
     printf("Type the buffer size: \n");
     scanf("%lu", &buffer.max);
 
-    //buffer name
+    //buffer name.
     printf("Type the buffer name \n");
     scanf("%s", &t);
     buffer.buffer = t;
 
-     circular_buf_init(buffer.buffer, buffer.max);
+    //buffer controller.
+    circular_buf_init(buffer.buffer, buffer.max);
+
+    //print buffer attributes
+    printf("buffer name: %s \n", &buffer.buffer);
+    printf("buffer size: %lu \n", buffer.max);
+
+    printf("Number of produced processes: %d \n", producers_counter);
+    printf("Number of consumed processes: %d \n", consumers_counter);
+
     //shared semaphore
     sem_init(&sem1, 1, 1);
 
