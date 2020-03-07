@@ -12,7 +12,7 @@
 #include <sys/mman.h>
 #include <stdbool.h>
 
-int BUFFER_NAME; //Name of the shared buffer
+char* BUFFER_NAME; //Name of the shared buffer
 int MEDIUM_SECONDS; //Medium duration for the message creation
 
 const char * NAME_MEMORY_TOTALPRODUCERS = "SHARED_MEMORY_TOTALPRODUCERS";
@@ -36,6 +36,22 @@ int * shelf;
 int loop=6;  
 sem_t * fill, * avail, * mutex;
 
+int getRandomNumber(){
+  int lower = 0, upper = 4; 
+  // Use current time as  
+  // seed for random generator 
+  srand(time(0)); 
+  int num = (rand() % (upper - lower + 1)) + lower; 
+  printf("Random number: %d \n", num);
+}
+
+//Random number for not declared directiion.
+double ran_expo(double lambda){
+    double u;
+    u = rand() / (RAND_MAX + 1.0);
+    return -log(1- u) / lambda;
+}
+
 int main(int argc, char *argv[]) {
    // variables to store date and time components
 	int hours, minutes, seconds, day, month, year;
@@ -52,13 +68,13 @@ int main(int argc, char *argv[]) {
 	// filled with the corresponding values
 	struct tm *local = localtime(&now);
 
-    hours = local->tm_hour;      	// get hours since midnight (0-23)
-    minutes = local->tm_min;     	// get minutes passed after the hour (0-59)
-    seconds = local->tm_sec;     	// get seconds passed after minute (0-59)
+  hours = local->tm_hour;      	// get hours since midnight (0-23)
+  minutes = local->tm_min;     	// get minutes passed after the hour (0-59)
+  seconds = local->tm_sec;     	// get seconds passed after minute (0-59)
 
-    day = local->tm_mday;        	// get day of month (1 to 31)
-    month = local->tm_mon + 1;   	// get month of year (0 to 11)
-    year = local->tm_year + 1900;	// get year since 1900
+  day = local->tm_mday;        	// get day of month (1 to 31)
+  month = local->tm_mon + 1;   	// get month of year (0 to 11)
+  year = local->tm_year + 1900;	// get year since 1900
 
   printf("Process id: %i\n", getpid());
 	// print local time
@@ -68,20 +84,15 @@ int main(int argc, char *argv[]) {
 	else	// after midday
 		printf("%02d/%02d/%d %02d:%02d:%02d pm\n", day, month, year, hours - 12, minutes, seconds);
 
-    int lower = 0, upper = 4; 
-  
-    // Use current time as  
-    // seed for random generator 
-    srand(time(0)); 
-    int num = (rand() % (upper - lower + 1)) + lower; 
-    printf("Random number: %d \n", num);
+    
    if (argc <= 2) {
       printf("Specify buffer name and medium in seconds\n");
       exit(0);
   } else {
-      BUFFER_NAME = atoi(argv[1]);
+      BUFFER_NAME = argv[1];
       MEDIUM_SECONDS  = atoi(argv[2]);
   }
+   printf("Buffer name: %s\n", BUFFER_NAME);
 
   /* make * shelf shared between processes*/
     //create the shared memory segment
@@ -118,7 +129,7 @@ int main(int argc, char *argv[]) {
     time_t end = time(NULL);
 
     // calculate elapsed time by finding difference (end - begin)
-    printf("Time elpased is %d seconds", (end - begin));
+    printf("Time elpased is %d seconds\n", (end - begin));
 
       /* close and unlink semaphores*/
     sem_close(fill);
