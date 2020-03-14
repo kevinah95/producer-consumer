@@ -9,7 +9,7 @@
 // The definition of our circular buffer structure is hidden from the user
 struct circular_buf_t
 {
-    char buffer[10][256];
+    char **buffer;
     size_t head;
     size_t tail;
     size_t max; //of the buffer
@@ -18,7 +18,28 @@ struct circular_buf_t
 
 #pragma mark - Private Functions -
 
-void advance_pointer(struct circular_buf_t *cbuf)
+cbuf_handle_t circular_buf_init(cbuf_handle_t cbuf, size_t size)
+{
+	//cbuf_handle_t cbuf //= malloc(sizeof(circular_buf_t));
+
+	assert(cbuf);
+  size_t cb = sizeof(char *) * size * 256;
+
+  cbuf->buffer = calloc(size, sizeof(char *));
+  for(int i = 0; i < size; i++){
+    cbuf->buffer[i] = calloc(256, sizeof(char));
+  }
+
+
+	cbuf->max = size;
+	circular_buf_reset(cbuf);
+
+	assert(circular_buf_empty(cbuf));
+
+	return cbuf;
+}
+
+void advance_pointer(cbuf_handle_t cbuf)
 {
 
     if (cbuf->full)
@@ -32,7 +53,7 @@ void advance_pointer(struct circular_buf_t *cbuf)
     cbuf->full = (cbuf->head == cbuf->tail);
 }
 
-int circular_buf_put(struct circular_buf_t *cbuf, char *data)
+int circular_buf_put(cbuf_handle_t cbuf, char *data)
 {
     int r = -1;
 
@@ -63,7 +84,7 @@ void circular_buf_free(cbuf_handle_t cbuf)
     free(cbuf);
 }
 
-void print_buffer_status(struct circular_buf_t *cbuf)
+void print_buffer_status(cbuf_handle_t cbuf)
 {
     printf("Full: %d, empty: %d, size: %zu\n",
            circular_buf_full(cbuf),
@@ -71,14 +92,14 @@ void print_buffer_status(struct circular_buf_t *cbuf)
            circular_buf_size(cbuf));
 }
 
-void circular_buf_reset(struct circular_buf_t * cbuf)
+void circular_buf_reset(cbuf_handle_t cbuf)
 {
     cbuf->head = 0;
     cbuf->tail = 0;
     cbuf->full = false;
 }
 
-size_t circular_buf_size(struct circular_buf_t *cbuf)
+size_t circular_buf_size(cbuf_handle_t cbuf)
 {
     size_t size = cbuf->max;
 
@@ -106,7 +127,7 @@ size_t circular_buf_capacity(cbuf_handle_t cbuf)
 
 
 
-int circular_buf_get(struct circular_buf_t * cbuf, char * data)
+int circular_buf_get(cbuf_handle_t cbuf, char * data)
 {
     int r = -1;
 
@@ -121,12 +142,12 @@ int circular_buf_get(struct circular_buf_t * cbuf, char * data)
     return r;
 }
 
-bool circular_buf_empty(struct circular_buf_t *cbuf)
+bool circular_buf_empty(cbuf_handle_t cbuf)
 {
     return (!cbuf->full && (cbuf->head == cbuf->tail));
 }
 
-bool circular_buf_full(struct circular_buf_t *cbuf)
+bool circular_buf_full(cbuf_handle_t cbuf)
 {
     return cbuf->full;
 }
