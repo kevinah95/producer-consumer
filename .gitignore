@@ -52,7 +52,7 @@ Mkfile.old
 dkms.conf
 
 # executables
-producer/producer
-consumer/consumer
-creator/creator
-killer/killer
+cycle/producer
+cycle/consumer
+cycle/creator
+cycle/killer
