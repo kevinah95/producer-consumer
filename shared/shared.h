@@ -6,17 +6,15 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define EXAMPLE_BUFFER_SIZE 10
-static const char * name = "shared_memory";
-static const char * p_mem = "p_mem";
-static const char * c_mem = "c_mem";
-static const char * sema1= "fill";
-static const char * sema2= "avail";
-static const char * sema3= "mutex";
-static int shm_fd;   //shared memory file discriptor
-static int p_shm_fd;
-static int c_shm_fd;
-static struct circular_buf_t *shared_mem_ptr;
-static int * producers;
-static int val;
-static sem_t * fill, * avail, * mutex;
+static const char * producers_mem_name = "producers_mem_name";
+static const char * consumers_mem_name = "consumers_mem_name";
+static const char * fill_sem_name= "fill";
+static const char * avail_sem_name= "avail";
+static const char * mutex_sem_name= "mutex";
+static int buffer_shm_fd;   //shared memory file discriptor
+static int producers_shm_fd;
+static int consumers_shm_fd;
+static struct circular_buf_t *buffer_mem_ptr;
+static int * producers_mem_ptr;
+static int * consumers_mem_ptr;
+static sem_t * fill_sem, * avail_sem, * mutex_sem;

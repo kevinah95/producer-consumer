@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
+#include <string.h>
 #include "circular_buffer.h"
 
 
