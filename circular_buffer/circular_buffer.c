@@ -2,14 +2,13 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
-#include "../shared/shared.h"
 #include "circular_buffer.h"
 
 
 // The definition of our circular buffer structure is hidden from the user
 struct circular_buf_t
 {
-    char buffer[EXAMPLE_BUFFER_SIZE][256];
+    char buffer[10][256];
     size_t head;
     size_t tail;
     size_t max; //of the buffer
