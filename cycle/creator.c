@@ -55,8 +55,9 @@ int main(int argc, char *argv[])
   ftruncate(producers_shm_fd, sizeof(int));
   ftruncate(consumers_shm_fd, sizeof(int));
   //map the shared memory segment in process address space
-
-  buffer_mem_ptr = mmap(0, sizeof(buffer_mem_ptr), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
+  buffer_mem_ptr = malloc(sizeof(cbuf_handle_t));
+  circular_buf_init(buffer_mem_ptr, buffer_size);
+  buffer_mem_ptr = mmap(0, sizeof(cbuf_handle_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
   producers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0);
   consumers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumers_shm_fd, 0);
   /* creat/open semaphores*/
@@ -68,19 +69,19 @@ int main(int argc, char *argv[])
   mutex_sem = sem_open(mutex_sem_name, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, 1);
 
 
-circular_buf_init(buffer_mem_ptr, buffer_size);
+  //circular_buf_init(buffer_mem_ptr, buffer_size);
 
-  printf("---------");
-
-
-  //memcpy(buffer_mem_ptr, cbuf, sizeof(cbuf));
-  char *s = "datos";
+  printf("sizeof(buffer_mem_ptr) = %zu\n",sizeof(buffer_mem_ptr));
+  size_t cb = sizeof(cbuf_handle_t) * sizeof(char *) * buffer_size * sizeof(char) * 256;
+  //printf("cb=%zu\n",cb);
+  printf("sizeof(cbuf_handle_t)=%zu\n",sizeof(cbuf_handle_t));
+  /* char *s = "datos";
     circular_buf_put(buffer_mem_ptr, s);
     print_buffer_status(buffer_mem_ptr);
 
   char data[256];
 		    circular_buf_get(buffer_mem_ptr, data);
-		    printf("%s ", data);
+		    printf("%s ", data); */
 
   //
 
@@ -94,6 +95,7 @@ circular_buf_init(buffer_mem_ptr, buffer_size);
   printf(" (sem_wait) semaphore mutex % d \n", val);
 
   free(buffer_name);
+  munmap(buffer_mem_ptr, sizeof(cbuf_handle_t));
 
   exit(EXIT_SUCCESS);
 }

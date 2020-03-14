@@ -23,11 +23,11 @@ cbuf_handle_t circular_buf_init(cbuf_handle_t cbuf, size_t size)
 	//cbuf_handle_t cbuf //= malloc(sizeof(circular_buf_t));
 
 	assert(cbuf);
-  size_t cb = sizeof(char *) * size * 256;
+  //size_t cb = sizeof(char *) * size;
 
-  cbuf->buffer = calloc(size, sizeof(char *));
+  cbuf->buffer = (char **)malloc(sizeof(char *) * size);
   for(int i = 0; i < size; i++){
-    cbuf->buffer[i] = calloc(256, sizeof(char));
+    cbuf->buffer[i] = (char *)malloc(sizeof(char) * 256);
   }
 
 
@@ -35,6 +35,8 @@ cbuf_handle_t circular_buf_init(cbuf_handle_t cbuf, size_t size)
 	circular_buf_reset(cbuf);
 
 	assert(circular_buf_empty(cbuf));
+
+  printf("sizeof(cbuf)=%zu\n",sizeof(cbuf));
 
 	return cbuf;
 }
@@ -59,6 +61,7 @@ int circular_buf_put(cbuf_handle_t cbuf, char *data)
 
     if (!circular_buf_full(cbuf))
     {
+        //cbuf->buffer[cbuf->head] = (char *)malloc(sizeof(char) * 256);
         strcpy(cbuf->buffer[cbuf->head], data);
         advance_pointer(cbuf);
         r = 0;
@@ -81,6 +84,10 @@ static void retreat_pointer(cbuf_handle_t cbuf)
 void circular_buf_free(cbuf_handle_t cbuf)
 {
     assert(cbuf);
+    for(int i = 0; i < cbuf->max; i++){
+      free(cbuf->buffer[i]);
+    }
+    free(cbuf->buffer);
     free(cbuf);
 }
 
