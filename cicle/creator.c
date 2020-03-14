@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,39 +9,12 @@
 #include <semaphore.h>
 #include <stdbool.h> 
 #include <unistd.h>
-
-#define EXAMPLE_BUFFER_SIZE 10
-
-struct circular_buf_t {
-	char buffer[EXAMPLE_BUFFER_SIZE][256];
-	size_t head;
-	size_t tail;
-	size_t max; //of the buffer
-	bool full;
-};
-
-void circular_buf_reset(struct circular_buf_t * cbuf)
-{
-    cbuf->head = 0;
-    cbuf->tail = 0;
-    cbuf->full = false;
-}
+#include "../circular_buffer/circular_buffer.h"
+#include "../circular_buffer/circular_buffer.c"
+#include "../shared/shared.h"
 
 int main()
 {
-    const char * name = "shared_memory";
-    const char * p_mem = "p_mem";
-    const char * sema1= "fill";
-    const char * sema2= "avail";
-    const char * sema3= "mutex";
-    int shm_fd;   //shared memory file discriptor
-    int p_shm_fd; 
-    struct circular_buf_t *shared_mem_ptr;
-    int * producers; 
-    int val;
-    sem_t * fill, * avail, * mutex;
-
-
     //create the shared memory segment
     shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
     p_shm_fd = shm_open(p_mem, O_CREAT | O_RDWR, 0666);

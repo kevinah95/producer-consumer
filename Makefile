@@ -2,14 +2,16 @@ CC      := gcc
 CCFLAGS := 
 LDFLAGS := -lpthread -lm -lrt
 
-TARGETS:= creator cook waiter
+#SRC_DIRS ?= ./
+
+TARGETS:= cicle/creator cicle/producer cicle/consumer cicle/killer
 MAINS  := $(addsuffix .o, $(TARGETS) )
-OBJ    := creator.o $(MAINS)
-DEPS   := 
+OBJ    := $(MAINS)
+#DEPS   :=
 
 .PHONY: all clean
 
-all: $(TARGETS)
+all: clean $(TARGETS)
 
 clean:
 	rm -f $(TARGETS) $(OBJ)
