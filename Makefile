@@ -4,7 +4,7 @@ LDFLAGS := -lpthread -lm -lrt
 
 #SRC_DIRS ?= ./
 
-TARGETS:= cicle/creator cicle/producer cicle/consumer cicle/killer
+TARGETS:= cycle/creator cycle/producer cycle/consumer cycle/killer
 MAINS  := $(addsuffix .o, $(TARGETS) )
 OBJ    := $(MAINS)
 #DEPS   :=
