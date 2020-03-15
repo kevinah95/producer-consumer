@@ -10,17 +10,14 @@
 #include <unistd.h>
 #include <math.h> // math for exponential function
 #include <time.h> // time for seeding
+#include <getopt.h>
 #include "../shared/shared.h"
 #include "../circular_buffer/circular_buffer.h"
 #include "../circular_buffer/circular_buffer.c"
 
-//#define EXAMPLE_BUFFER_SIZE 10
-
-const char * NAME_MEMORY_SUSPEND = "SHARED_MEMORY_SUSPEND";
-int SHAREDM_FILEDESCRIPTOR_SUSPEND;   //shared memory file discriptor for suspend process
-int * SUSPEND; //If true suspend the process
-
+int *is_not_suspended;
 int *producers;
+int *consumers;
 int totalMessages = 0;
 
 int getRandomNumber(){
@@ -40,73 +37,88 @@ double ran_expo(double lambda) {
 
 int main(int argc, char *argv[])
 {
-  char *name = "shared_memory";
+  char *buffer_name = "shared_memory";
   const char *p_mem = "p_mem";
   const char *sema1 = "fill";
   const char *sema2 = "avail";
   const char *sema3 = "mutex";
   double timeBlocked = 0;
+  double timeWaiting = 0;
+  char * endDecimalConvert;
   double mediumConstant = 0.2;
-  if(argc == 1){
-    printf("A default value of shared_memory was set for the name of the buffer\n");
-    printf("A default value of 0.2 was set for exponential distribution\n");
-  }else if (argc == 2) {
-    printf("A default value of 0.2 was set for exponential distribution\n");
-    printf("%s",argv[1]);
-    name = argv[1];
-  } else {
-    name = argv[1];
-    char * end;
-    mediumConstant = strtod (argv[2], & end);
-    if (end == argv[2]) {
-      printf ("Second parameter is not a valid number.\n");
-      exit(0);
+  int opt;
+  while ((opt = getopt(argc, argv, "m:n")) != -1)
+  {
+    switch (opt)
+    {
+    case 'n':
+      buffer_name = strdup(argv[optind]);
+      break;
+    case 'm':
+      mediumConstant = strtod (optarg, & endDecimalConvert);
+      if (endDecimalConvert == optarg) {
+        printf ("-m parameter does not has a valid number.\n");
+        exit(0);
+      }
+      break;
+    default:
+      fprintf(stderr, "Usage: %s [-n buffer_name] [-m medium]\n",
+              argv[0]);
+      exit(EXIT_FAILURE);
     }
   }
-  const int bufsize = 80;
+
+  if (optind >= argc)
+  {
+    fprintf(stderr, "Expected argument after options\n\tUsage: %s [-n buffer_name] [-m medium]\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
   int hours, minutes, seconds, day, month, year;
-  time_t begin = time(NULL);
   int shm_fd; //shared memory file discriptor
   int p_shm_fd;
+  int consumer_shm_fd;
   struct circular_buf_t *shared_mem_ptr;
   int val;
   sem_t *fill, *avail, *mutex;
   /* make * shelf shared between processes*/
   //create the shared memory segment
-  shm_fd = shm_open(name, O_RDWR, 0666);
+  shm_fd = shm_open(buffer_name, O_RDWR, 0666);
   p_shm_fd = shm_open(producers_mem_name, O_RDWR, 0666);
+  consumer_shm_fd = shm_open(consumers_mem_name, O_RDWR, 0666);
+  SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_RDWR, 0666);
   //configure the size of the shared memory segment
   ftruncate(shm_fd, sizeof(struct circular_buf_t));
   ftruncate(p_shm_fd, sizeof(int));
+  ftruncate(consumer_shm_fd, sizeof(int));
+  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
   //map the shared memory segment in process address space
   shared_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
   producers = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, p_shm_fd, 0);
+  consumers = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumer_shm_fd, 0);
+  is_not_suspended = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
   /* creat/open semaphores*/
   //cook post semaphore fill after cooking a pizza
   fill = sem_open(sema1, O_RDWR);
   avail = sem_open(sema2, O_RDWR);
   mutex = sem_open(sema3, O_RDWR);
 
-  //create the shared memory segment
-  SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR, 0666);
-  //configure the size of the shared memory segment
-  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
-  //map the shared memory segment in process address space
-  SUSPEND = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
-
   //print_buffer_status(shared_mem_ptr);
   printf("\nProducer: I have started producing messages.\n");
   (* producers)++;
-  *SUSPEND = 1;
-  while(*SUSPEND > 0){
+  while(*is_not_suspended > 0){
     sem_getvalue(avail, &val);
     //printf(" (sem_wait) avail semaphore % d \n", val);
     sem_getvalue(fill, &val);
     //printf(" (sem_wait) fill semaphore % d \n", val);
     time_t beginSemaphore = time(NULL);
     sem_wait(avail);
+    time_t endSemaphore = time(NULL);
+    timeBlocked = timeBlocked + (beginSemaphore - endSemaphore);
     int sleepTime = ran_expo(mediumConstant);
+    timeWaiting = timeWaiting + sleepTime;
     sleep(sleepTime);
+
     sem_getvalue(mutex, &val);
     //printf(" (sem_wait)semaphore mutex % d \n", val);
     sem_wait(mutex);
@@ -132,14 +144,12 @@ int main(int argc, char *argv[])
 
     char s[256] ="";
     int charcheck = snprintf(s, 256 - 1, "%d-Date: %i/%i/%i Time: %i:%i:%i-%i\n",getpid(),year,month,day,hours,minutes,seconds,getRandomNumber());
-    printf("Inserting message in buffer at position %i. Producers: %i\n",shared_mem_ptr->head, *producers);
+    printf("Inserting message in buffer at position %i. Producers: %i. Consumers:%i\n",shared_mem_ptr->head, *producers, *consumers);
     circular_buf_put(shared_mem_ptr, s);
     totalMessages++;
     //print_buffer_status(shared_mem_ptr);
     sem_post(mutex);
     sem_post(fill);
-    time_t endSemaphore = time(NULL);
-    timeBlocked = timeBlocked + (beginSemaphore - endSemaphore) - sleepTime;
   }
   sem_wait(mutex);
   (* producers)--;
@@ -155,10 +165,10 @@ int main(int argc, char *argv[])
       munmap(shelf, sizeof(int));
     close(shm_fd);
     shm_unlink(name); */
-  time_t end = time(NULL);
   // calculate elapsed time by finding difference (end - begin)
-  printf("Time elpased is %d seconds\n", (end - begin));
+  printf("Producer %i terminated.\n", getpid());
   printf("Total messages created: %i\n", totalMessages);
-  printf("Total time blocked by semaphores in seconds: %d\n", totalMessages);
+  printf("Total time waiting in seconds: %d\n", timeWaiting);
+  printf("Total time blocked by semaphores in seconds: %d\n", timeBlocked);
   return 0;
 }
