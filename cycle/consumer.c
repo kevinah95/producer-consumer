@@ -11,6 +11,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <getopt.h>
 #include "../shared/shared.h"
 #include "../circular_buffer/circular_buffer.h"
 #include "../circular_buffer/circular_buffer.c"
@@ -188,7 +189,7 @@ void stop_consumer() {
   read_and_modify_consumer_counter(false);
   printf("***************************************************\n");
   printf("Consumer %i: this consumer has been stopped\n", getpid());
-  printf("Consumer %i: this consumer remained alive %ld second(s)\n", getpid(), (time(NULL) - begin));
+  //printf("Consumer %i: this consumer remained alive %ld second(s)\n", getpid(), (time(NULL) - begin));
   printf("Consumer %i: this consumer was blocked %f second(s)\n", getpid(), timeBlocked);
   printf("Consumer %i: this consumer was slept %f second(s)\n", getpid(), total_time_sleeping);
   printf("Consumer %i: this consumer read %d message(s)\n", getpid(), counter_read_messages);
@@ -264,21 +265,32 @@ void read_messages_from_buffer(double seconds_mean, char *data) {
 int main(int argc, char *argv[]) {
   begin = time(NULL);
   char data[256];
-  if(argc == 1){
-    printf("A default value of %s was set for the name of the buffer\n", buffer_name);
-    printf("A default value of %f was set for exponential distribution\n", meanConstant);
-  }else if (argc == 2) {
-    printf("A default value of %f was set for exponential distribution\n", meanConstant);
-    printf("The name of the buffer is: %s\n",argv[1]);
-    buffer_name = argv[1];
-  } else {
-    buffer_name = argv[1];
-    char * end;
-    meanConstant = strtod (argv[2], & end);
-    if (end == argv[2]) {
-      printf ("Second parameter is not a valid number.\n");
-      exit(0);
+  char * endDecimalConvert;
+  int opt;
+  while ((opt = getopt(argc, argv, "m:n")) != -1)
+  {
+    switch (opt)
+    {
+    case 'n':
+      buffer_name = strdup(argv[optind]);
+      break;
+    case 'm':
+      meanConstant = strtod (optarg, & endDecimalConvert);
+      if (endDecimalConvert == optarg) {
+        printf ("-m parameter does not contain a valid number.\n");
+        exit(0);
+      }
+      break;
+    default:
+      fprintf(stderr, "Usage: %s [-n buffer_name] [-m mean]\n", argv[0]);
+      exit(EXIT_FAILURE);
     }
+  }
+
+  if (optind >= argc)
+  {
+    fprintf(stderr, "Expected argument after options\n\tUsage: %s [-n buffer_name] [-m mean]\n", argv[0]);
+    exit(EXIT_FAILURE);
   }
 
   printf("Consumer %i has been initialized...\n", getpid());
