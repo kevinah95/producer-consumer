@@ -56,3 +56,6 @@ cycle/producer
 cycle/consumer
 cycle/creator
 cycle/killer
+
+# Other files
+*.DS_Store
