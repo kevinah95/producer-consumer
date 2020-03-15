@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <math.h> // math for exponential function
 #include <time.h> // time for seeding
+#include <getopt.h>
 #include "../shared/shared.h"
 #include "../circular_buffer/circular_buffer.h"
 #include "../circular_buffer/circular_buffer.c"
@@ -35,14 +36,43 @@ double ran_expo(double lambda) {
 
 int main(int argc, char *argv[])
 {
-  char *name = "shared_memory";
+  char *buffer_name = "shared_memory";
   const char *p_mem = "p_mem";
   const char *sema1 = "fill";
   const char *sema2 = "avail";
   const char *sema3 = "mutex";
   double timeBlocked = 0;
+  char * endDecimalConvert;
   double mediumConstant = 0.2;
-  if(argc == 1){
+  int opt;
+  while ((opt = getopt(argc, argv, "m:n")) != -1)
+  {
+    switch (opt)
+    {
+    case 'n':
+      buffer_name = strdup(argv[optind]);
+      break;
+    case 'm':
+      mediumConstant = strtod (optarg, & endDecimalConvert);
+      if (endDecimalConvert == optarg) {
+        printf ("-m parameter does not has a valid number.\n");
+        exit(0);
+      }
+      break;
+    default:
+      fprintf(stderr, "Usage: %s [-n buffer_name] [-m medium]\n",
+              argv[0]);
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  if (optind >= argc)
+  {
+    fprintf(stderr, "Expected argument after options\n\tUsage: %s [-n buffer_name] [-m medium]\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
+  /*if(argc == 1){
     printf("A default value of shared_memory was set for the name of the buffer\n");
     printf("A default value of 0.2 was set for exponential distribution\n");
   }else if (argc == 2) {
@@ -57,8 +87,7 @@ int main(int argc, char *argv[])
       printf ("Second parameter is not a valid number.\n");
       exit(0);
     }
-  }
-  const int bufsize = 80;
+  }*/
   int hours, minutes, seconds, day, month, year;
   time_t begin = time(NULL);
   int shm_fd; //shared memory file discriptor
@@ -68,7 +97,7 @@ int main(int argc, char *argv[])
   sem_t *fill, *avail, *mutex;
   /* make * shelf shared between processes*/
   //create the shared memory segment
-  shm_fd = shm_open(name, O_RDWR, 0666);
+  shm_fd = shm_open(buffer_name, O_RDWR, 0666);
   p_shm_fd = shm_open(producers_mem_name, O_RDWR, 0666);
   SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_RDWR, 0666);
   //configure the size of the shared memory segment
