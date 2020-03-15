@@ -14,12 +14,7 @@
 #include "../circular_buffer/circular_buffer.h"
 #include "../circular_buffer/circular_buffer.c"
 
-//#define EXAMPLE_BUFFER_SIZE 10
-
-const char * NAME_MEMORY_SUSPEND = "SHARED_MEMORY_SUSPEND";
-int SHAREDM_FILEDESCRIPTOR_SUSPEND;   //shared memory file discriptor for suspend process
-int * SUSPEND; //If true suspend the process
-
+int *is_not_suspended;
 int *producers;
 int totalMessages = 0;
 
@@ -75,30 +70,25 @@ int main(int argc, char *argv[])
   //create the shared memory segment
   shm_fd = shm_open(name, O_RDWR, 0666);
   p_shm_fd = shm_open(producers_mem_name, O_RDWR, 0666);
+  SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_RDWR, 0666);
   //configure the size of the shared memory segment
   ftruncate(shm_fd, sizeof(struct circular_buf_t));
   ftruncate(p_shm_fd, sizeof(int));
+  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
   //map the shared memory segment in process address space
   shared_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
   producers = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, p_shm_fd, 0);
+  is_not_suspended = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
   /* creat/open semaphores*/
   //cook post semaphore fill after cooking a pizza
   fill = sem_open(sema1, O_RDWR);
   avail = sem_open(sema2, O_RDWR);
   mutex = sem_open(sema3, O_RDWR);
 
-  //create the shared memory segment
-  SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR, 0666);
-  //configure the size of the shared memory segment
-  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
-  //map the shared memory segment in process address space
-  SUSPEND = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
-
   //print_buffer_status(shared_mem_ptr);
   printf("\nProducer: I have started producing messages.\n");
   (* producers)++;
-  *SUSPEND = 1;
-  while(*SUSPEND > 0){
+  while(*is_not_suspended > 0){
     sem_getvalue(avail, &val);
     //printf(" (sem_wait) avail semaphore % d \n", val);
     sem_getvalue(fill, &val);
