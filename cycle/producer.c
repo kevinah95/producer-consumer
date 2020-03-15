@@ -17,31 +17,38 @@ int main()
 {
   const char *name = "k";
   int shm_fd; //shared memory file discriptor
-
-  cbuf_handle_t shared_mem_ptr;
+  int buffer_size = 3;
+  size_t len = sizeof(struct circular_buf_t); //+ sizeof(char *) * buffer_size * sizeof(char) * 256;
 
   /* make * shelf shared between processes*/
   //create the shared memory segment
   shm_fd = shm_open(name, O_RDWR, 0666);
   //configure the size of the shared memory segment
-  ftruncate(shm_fd, sizeof(cbuf_handle_t));
+  ftruncate(shm_fd, len);
   //map the shared memory segment in process address space
-  shared_mem_ptr = mmap(0, sizeof(cbuf_handle_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+  buffer_mem_ptr = mmap(0, len, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+  buffer_mem_ptr->buffer = (char **)mmap(buffer_mem_ptr->buffer, sizeof(char *) * buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  for(int i = 0; i < buffer_size; i++){
+    buffer_mem_ptr->buffer[i] = (char *)mmap(buffer_mem_ptr->buffer[i], sizeof(char) * 256, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  }
 
   /* creat/open semaphores*/
   //cook post semaphore fill after cooking a pizza
 
-  print_buffer_status(shared_mem_ptr);
+  print_buffer_status(buffer_mem_ptr);
   printf("\nCook: I have started cooking pizza.\n");
 
 
+char *s = "datos";
+    circular_buf_put(buffer_mem_ptr, s);
+    print_buffer_status(buffer_mem_ptr);
 
-    /* char data[256];
-		    circular_buf_get(shared_mem_ptr, data);
-		    printf("%s ", data); */
-    char *s = "datos";
-    circular_buf_put(shared_mem_ptr, s);
-    print_buffer_status(shared_mem_ptr);
+    char data[256];
+		    circular_buf_get(buffer_mem_ptr, data);
+		    printf("%s ", data);
+    /* char *s = "datos";
+    circular_buf_get(buffer_mem_ptr, s);
+    print_buffer_status(buffer_mem_ptr); */
 
 
 

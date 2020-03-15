@@ -3,6 +3,11 @@
 #include <stddef.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/shm.h>
 #include "circular_buffer.h"
 
 
@@ -25,11 +30,18 @@ cbuf_handle_t circular_buf_init(cbuf_handle_t cbuf, size_t size)
 	assert(cbuf);
   //size_t cb = sizeof(char *) * size;
 
-  cbuf->buffer = (char **)malloc(sizeof(char *) * size);
+  /* cbuf->buffer = (char **)malloc(sizeof(char *) * size);
   for(int i = 0; i < size; i++){
     cbuf->buffer[i] = (char *)malloc(sizeof(char) * 256);
+  } */
+
+  cbuf->buffer = (char **)mmap(cbuf->buffer, sizeof(char *) * size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  for(int i = 0; i < size; i++){
+    cbuf->buffer[i] = (char *)mmap(cbuf->buffer[i], sizeof(char) * 256, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   }
 
+  if (cbuf->buffer == MAP_FAILED)
+        exit(EXIT_FAILURE);
 
 	cbuf->max = size;
 	circular_buf_reset(cbuf);

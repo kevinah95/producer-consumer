@@ -15,7 +15,7 @@ static const char * mutex_sem_name= "mutex";
 static int buffer_shm_fd;   //shared memory file discriptor
 static int producers_shm_fd;
 static int consumers_shm_fd;
-static cbuf_handle_t buffer_mem_ptr;
+static struct circular_buf_t *buffer_mem_ptr;
 static int * producers_mem_ptr;
 static int * consumers_mem_ptr;
 static sem_t * fill_sem, * avail_sem, * mutex_sem;
