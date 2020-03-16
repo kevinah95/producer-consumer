@@ -114,11 +114,9 @@ int main(int argc, char *argv[])
     time_t beginSemaphore = time(NULL);
     sem_wait(avail);
     time_t endSemaphore = time(NULL);
-    printf("begin %d end %d", beginSemaphore, endSemaphore);
     timeBlocked = timeBlocked + (endSemaphore - beginSemaphore);
     int sleepTime = ran_expo(mediumConstant);
     timeWaiting = timeWaiting + sleepTime;
-    printf("Time waiting %d", sleepTime);
     sleep(sleepTime);
 
     sem_getvalue(mutex, &val);
