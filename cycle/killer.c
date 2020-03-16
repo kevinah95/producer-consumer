@@ -55,7 +55,8 @@ int main(int argc, char *argv[]) {
   producers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0);
   consumers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumers_shm_fd, 0);
   SUSPEND = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
-  
+  int totalProducers = *producers_mem_ptr;
+  int totalConsumers = *consumers_mem_ptr;
   int shm_fd; //shared memory file discriptor
   struct circular_buf_t *shared_mem_ptr;
   sem_t *fill, *avail, *mutex;
@@ -95,6 +96,8 @@ int main(int argc, char *argv[]) {
     sem_post(mutex);
     sem_post(fill);
   }
+  printf("\nTotal producers created: %i\n", totalProducers);
+  printf("Total consumers killed: %i\n", totalConsumers);
   sleep(5);
   sem_post(avail);
   munmap(SUSPEND, sizeof(int));
