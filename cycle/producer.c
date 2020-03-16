@@ -154,17 +154,14 @@ int main(int argc, char *argv[])
   sem_wait(mutex);
   (* producers)--;
   sem_post(mutex);
-  /* close and unlink semaphores*/
-  /* sem_close(fill);
-    sem_close(avail);
-    sem_close(mutex);
-    sem_unlink(sema1);
-    sem_unlink(sema2);
-    sem_unlink(sema3);
 
-      munmap(shelf, sizeof(int));
-    close(shm_fd);
-    shm_unlink(name); */
+  sem_close(fill);
+  sem_close(avail);
+  sem_close(mutex);
+  sem_unlink(sema1);
+  sem_unlink(sema2);
+  sem_unlink(sema3);
+
   // calculate elapsed time by finding difference (end - begin)
   printf("Producer %i terminated.\n", getpid());
   printf("Total messages created: %i\n", totalMessages);
