@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     time_t beginSemaphore = time(NULL);
     sem_wait(avail);
     time_t endSemaphore = time(NULL);
-    timeBlocked = timeBlocked + (beginSemaphore - endSemaphore);
+    timeBlocked = timeBlocked + (endSemaphore - beginSemaphore);
     int sleepTime = ran_expo(mediumConstant);
     timeWaiting = timeWaiting + sleepTime;
     sleep(sleepTime);
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
   // calculate elapsed time by finding difference (end - begin)
   printf("Producer %i terminated.\n", getpid());
   printf("Total messages created: %i\n", totalMessages);
-  printf("Total time waiting in seconds: %d\n", timeWaiting);
-  printf("Total time blocked by semaphores in seconds: %d\n", timeBlocked);
+  printf("Total time waiting in seconds: %f\n", timeWaiting);
+  printf("Total time blocked by semaphores in seconds: %f\n", timeBlocked);
   return 0;
 }
