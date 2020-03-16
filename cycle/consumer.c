@@ -32,6 +32,7 @@ int * producer_counter; // Represents the number of producer processes alive
 
 int c_shm_fd; // Shared memory file discriptor
 int p_shm_fd;
+int buffer_size = 10;
 
 int counter_read_messages = 0; // Counts the read messages
 
@@ -212,15 +213,24 @@ void initialize_buffer_semaphores() {
 
   // Open the shared memory segment
   buffer_shm_fd = shm_open(buffer_name, O_RDWR, 0666);
-  ftruncate(buffer_shm_fd, sizeof(struct circular_buf_t));
+  ftruncate(buffer_shm_fd, sizeof(struct circular_buf_t) * sizeof(char) * buffer_size);
 
   // Now map the shared memory segment of the buffer in the address space of the process
-  shared_circular_buffer = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
+  shared_circular_buffer = mmap(0, sizeof(struct circular_buf_t) * sizeof(char) * buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
 
   // Open semaphores
-  fill = sem_open(fill_sem_name, O_CREAT,0666,0);
-  avail = sem_open(avail_sem_name, O_CREAT, 0666, 3);
-  mutex = sem_open(mutex_sem_name,O_CREAT,0666,1);
+  fill = sem_open(fill_sem_name, O_RDWR);
+  avail = sem_open(avail_sem_name, O_RDWR);
+  mutex = sem_open(mutex_sem_name, O_RDWR);
+
+  char buffer_prime_name[256];
+  strcpy(buffer_prime_name, buffer_name);
+  strcat(buffer_prime_name, "_prime");
+  int fd = shm_open(buffer_prime_name, O_RDWR, 0666);
+  ftruncate(fd, buffer_size * 256);
+  sem_wait(mutex);
+  shared_circular_buffer->buffer = mmap(NULL, buffer_size * 256, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  sem_post(mutex);
 
   //printf("Buffer semaphores have been initialized\n");
 }
