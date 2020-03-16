@@ -151,16 +151,7 @@ int main(int argc, char *argv[])
     sem_post(mutex);
     sem_post(fill);
   }
-  sem_wait(mutex);
   (* producers)--;
-  sem_post(mutex);
-
-  sem_close(fill);
-  sem_close(avail);
-  sem_close(mutex);
-  sem_unlink(sema1);
-  sem_unlink(sema2);
-  sem_unlink(sema3);
 
   // calculate elapsed time by finding difference (end - begin)
   printf("Producer %i terminated.\n", getpid());

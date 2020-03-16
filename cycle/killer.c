@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
     sem_post(fill);
   }
   sleep(5);
+  sem_post(avail);
   munmap(SUSPEND, sizeof(int));
   close(SHAREDM_FILEDESCRIPTOR_SUSPEND);
 
