@@ -31,6 +31,11 @@ static int * SUSPEND; //If true suspend the process
 
 static sem_t * fill_sem, * avail_sem, * mutex_sem;
 
+const char * prod_counter_mutex= "/prod_counter_mutex";
+const char * con_counter_mutex = "/con_counter_mutex";
+sem_t * sem_con_producer_mutex; // Semaphore to control the producer counter of shared memory
+sem_t * sem_con_counter_mutex; // Semaphore to control the consumer counter of shared memory
+
 const char special_message[] = "KILLER_MESSAGE_FROM_FINISHER"; // Special message that indicates the process must finish
 
 static int default_buffer_size = 10;

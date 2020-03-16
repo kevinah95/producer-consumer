@@ -106,10 +106,14 @@ int main(int argc, char *argv[])
   fill_sem = sem_open(fill_sem_name, O_RDWR);
   avail_sem = sem_open(avail_sem_name, O_RDWR);
   mutex_sem = sem_open(mutex_sem_name, O_RDWR);
+  sem_con_producer_mutex = sem_open(prod_counter_mutex, O_RDWR);
+  sem_con_counter_mutex = sem_open(con_counter_mutex, O_RDWR);
 
   //print_buffer_status(buffer_mem_ptr);
   printf("\nProducer: I have started producing messages.\n");
+  sem_wait(sem_con_producer_mutex);
   (*producers_mem_ptr)++;
+  sem_post(sem_con_producer_mutex);
   while (*is_not_suspended > 0)
   {
     sem_getvalue(avail_sem, &val);
@@ -156,9 +160,9 @@ int main(int argc, char *argv[])
     sem_post(mutex_sem);
     sem_post(fill_sem);
   }
-  sem_wait(mutex_sem);
+  sem_wait(sem_con_producer_mutex);
   (*producers_mem_ptr)--;
-  sem_post(mutex_sem);
+  sem_post(sem_con_producer_mutex);
   /* close and unlink semaphores*/
 
   sem_close(fill_sem);

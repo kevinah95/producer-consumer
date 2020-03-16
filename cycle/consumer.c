@@ -21,11 +21,8 @@
 
 //const char special_message[] = "KILLER_MESSAGE_FROM_FINISHER"; // Special message that indicates the process must finisha
 
-const char * prod_counter_mutex= "/prod_counter_mutex";
-const char * con_counter_mutex = "/con_counter_mutex";
 
-sem_t * sem_con_producer_mutex; // Semaphore to control the producer counter of shared memory
-sem_t * sem_con_counter_mutex; // Semaphore to control the consumer counter of shared memory
+
 
 
 int counter_read_messages = 0; // Counts the read messages
@@ -43,8 +40,8 @@ double total_time_sleeping = 0;
 * Initializes mutex semaphores to control the counters of shared memory
 */
 void initialize_semaphores() {
-  sem_con_producer_mutex = sem_open(prod_counter_mutex, O_CREAT, 0644, 1);
-  sem_con_counter_mutex = sem_open(con_counter_mutex, O_CREAT, 0644, 1);
+  sem_con_producer_mutex = sem_open(prod_counter_mutex, O_RDWR);
+  sem_con_counter_mutex = sem_open(con_counter_mutex, O_RDWR);
   //printf("Semaphores have been initialized\n");
 }
 

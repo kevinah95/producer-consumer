@@ -79,6 +79,10 @@ int main(int argc, char *argv[])
 
   mutex_sem = sem_open(mutex_sem_name, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, 1);
 
+  sem_con_producer_mutex = sem_open(prod_counter_mutex, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, 1);
+
+  sem_con_counter_mutex = sem_open(con_counter_mutex, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, 1);
+
   buffer_mem_ptr->max = buffer_size;
   circular_buf_reset(buffer_mem_ptr);
 
