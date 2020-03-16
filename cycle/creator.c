@@ -47,16 +47,15 @@ int main(int argc, char *argv[])
   printf("buffer_name argument = %s\n", buffer_name);
   printf("buffer_size argument = %zu\n", buffer_size);
   //create the shared memory segment
-  buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, 0666);
+  buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   producers_shm_fd = shm_open(producers_mem_name, O_CREAT | O_RDWR, 0666);
   consumers_shm_fd = shm_open(consumers_mem_name, O_CREAT | O_RDWR, 0666);
   //configure the size of the shared memory segment
-  size_t len = sizeof(struct circular_buf_t); //+ sizeof(char *) * buffer_size * sizeof(char) * 256;
+  size_t len = sizeof(struct circular_buf_t) * sizeof(char) * buffer_size; //* sizeof(char *) * buffer_size * sizeof(char) * 256;
   ftruncate(buffer_shm_fd, len);
   ftruncate(producers_shm_fd, sizeof(int));
   ftruncate(consumers_shm_fd, sizeof(int));
   //map the shared memory segment in process address space
-  //circular_buf_init(buffer_mem_ptr, buffer_size);
 
   buffer_mem_ptr = mmap(0, len, PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
   producers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0);

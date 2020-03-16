@@ -1,5 +1,5 @@
 CC      := gcc
-CCFLAGS := 
+CCFLAGS :=
 LDFLAGS := -lpthread -lm -lrt
 
 #SRC_DIRS ?= ./
@@ -14,7 +14,7 @@ OBJ    := $(MAINS)
 all: clean $(TARGETS)
 
 clean:
-	rm -f $(TARGETS) $(OBJ)
+	rm -rf /dev/shm/* && rm -f $(TARGETS) $(OBJ)
 
 $(OBJ): %.o : %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CCFLAGS)

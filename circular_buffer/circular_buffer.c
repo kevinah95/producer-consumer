@@ -14,7 +14,7 @@
 // The definition of our circular buffer structure is hidden from the user
 struct circular_buf_t
 {
-    char **buffer;
+    char (*buffer)[256];
     size_t head;
     size_t tail;
     size_t max; //of the buffer
@@ -35,13 +35,14 @@ cbuf_handle_t circular_buf_init(cbuf_handle_t cbuf, size_t size)
     cbuf->buffer[i] = (char *)malloc(sizeof(char) * 256);
   } */
 
-  cbuf->buffer = (char **)mmap(cbuf->buffer, sizeof(char *) * size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  for(int i = 0; i < size; i++){
-    cbuf->buffer[i] = (char *)mmap(cbuf->buffer[i], sizeof(char) * 256, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  }
+  //cbuf->buffer = (char **)mmap(NULL, sizeof(char *) * size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  /* for(int i = 0; i < size; i++){
+    cbuf->buffer[i] = (char *)mmap(NULL, sizeof(char) * size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  } */
+  int fd = shm_open("/k_prime", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  ftruncate(fd, size*256);
 
-  if (cbuf->buffer == MAP_FAILED)
-        exit(EXIT_FAILURE);
+  cbuf->buffer = mmap(NULL,size*256,PROT_READ | PROT_WRITE,MAP_SHARED,fd,0);
 
 	cbuf->max = size;
 	circular_buf_reset(cbuf);
@@ -75,6 +76,7 @@ int circular_buf_put(cbuf_handle_t cbuf, char *data)
     {
         //cbuf->buffer[cbuf->head] = (char *)malloc(sizeof(char) * 256);
         strcpy(cbuf->buffer[cbuf->head], data);
+        //memcpy(cbuf, data, strlen(data)+1);
         advance_pointer(cbuf);
         r = 0;
     }
