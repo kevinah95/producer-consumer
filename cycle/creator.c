@@ -49,21 +49,27 @@ int main(int argc, char *argv[])
 
   //create the shared memory segment
   buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, 0666);
+  char buffer_prime_name[256];
+  strcpy(buffer_prime_name, buffer_name);
+  strcat(buffer_prime_name, "_prime");
+  buffer_prime_shm_fd = shm_open(buffer_prime_name, O_CREAT | O_RDWR, 0666);
   producers_shm_fd = shm_open(producers_mem_name, O_CREAT | O_RDWR, 0666);
   consumers_shm_fd = shm_open(consumers_mem_name, O_CREAT | O_RDWR, 0666);
   SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR, 0666);
 
   //configure the size of the shared memory segment
   ftruncate(buffer_shm_fd, sizeof(struct circular_buf_t));
+  ftruncate(buffer_prime_shm_fd, buffer_size * 256);
   ftruncate(producers_shm_fd, sizeof(int));
   ftruncate(consumers_shm_fd, sizeof(int));
-  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
+  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND, sizeof(int));
   //map the shared memory segment in process address space
   buffer_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
+  buffer_mem_ptr->buffer = mmap(NULL, buffer_size * 256, PROT_READ | PROT_WRITE, MAP_SHARED, buffer_prime_shm_fd, 0);
   producers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0);
   consumers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumers_shm_fd, 0);
-  SUSPEND = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
-  
+  SUSPEND = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
+
   *SUSPEND = 1; //Enable creation of messages for producers
   /* creat/open semaphores*/
 

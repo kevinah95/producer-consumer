@@ -27,11 +27,6 @@ const char * con_counter_mutex = "/con_counter_mutex";
 sem_t * sem_con_producer_mutex; // Semaphore to control the producer counter of shared memory
 sem_t * sem_con_counter_mutex; // Semaphore to control the consumer counter of shared memory
 
-int * consumer_counter; // Represents the number of consumer processes alive
-int * producer_counter; // Represents the number of producer processes alive
-
-int c_shm_fd; // Shared memory file discriptor
-int p_shm_fd;
 
 int counter_read_messages = 0; // Counts the read messages
 
@@ -40,8 +35,6 @@ time_t begin;
 double meanConstant = 0.2;
 
 char * buffer_name = default_buffer_name;
-struct circular_buf_t * shared_circular_buffer;
-sem_t * fill, * avail, * mutex;
 
 double timeBlocked = 0;
 double total_time_sleeping = 0;
@@ -69,10 +62,10 @@ void close_semaphores() {
 * Close and unlink used shared memory
 */
 void close_shared_memory() {
-  munmap(consumer_counter, sizeof(int));
-  munmap(producer_counter, sizeof(int));
-  close(c_shm_fd);
-  close(p_shm_fd);
+  munmap(consumers_mem_ptr, sizeof(int));
+  munmap(producers_mem_ptr, sizeof(int));
+  close(consumers_shm_fd);
+  close(producers_shm_fd);
   shm_unlink(consumers_mem_name);
   shm_unlink(producers_mem_name);
 }
@@ -124,31 +117,31 @@ int read_and_modify_consumer_counter(bool isIncrement) {
   pid = getpid();
 
   // Get shared memory file descriptor (not a file)
-  c_shm_fd = shm_open(consumers_mem_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if (c_shm_fd == -1)
+  consumers_shm_fd = shm_open(consumers_mem_name, O_RDWR, S_IRUSR | S_IWUSR);
+  if (consumers_shm_fd == -1)
   {
     perror("open");
     return 10;
   }
 
   // Configure the size of the shared memory segment
-  ftruncate(c_shm_fd, sizeof(int));
+  ftruncate(consumers_shm_fd, sizeof(int));
 
   // Map shared memory to process address space
-  consumer_counter = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, c_shm_fd, 0);
-  if (consumer_counter == MAP_FAILED)
+  consumers_mem_ptr = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumers_shm_fd, 0);
+  if (consumers_mem_ptr == MAP_FAILED)
   {
     perror("mmap");
     return 30;
   }
 
-  //printf("PID %d: Read from shared memory: \"%d\"\n", pid, *consumer_counter);
+  //printf("PID %d: Read from shared memory: \"%d\"\n", pid, *consumers_mem_ptr);
 
   sem_wait(sem_con_counter_mutex);
   if(isIncrement) {
-    (* consumer_counter)++;
+    (* consumers_mem_ptr)++;
   } else {
-    (* consumer_counter)--;
+    (* consumers_mem_ptr)--;
   }
   sem_post(sem_con_counter_mutex);
   //printf("consumer_counter has been increased/decreased\n");
@@ -164,19 +157,19 @@ int read_producer_counter() {
   pid = getpid();
 
   // Get shared memory file descriptor (not a file)
-  p_shm_fd = shm_open(producers_mem_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if (p_shm_fd == -1)
+  producers_shm_fd = shm_open(producers_mem_name, O_RDWR, S_IRUSR | S_IWUSR);
+  if (producers_shm_fd == -1)
   {
     perror("open");
     return 10;
   }
 
   // Configure the size of the shared memory segment
-  ftruncate(p_shm_fd, sizeof(int));
+  ftruncate(producers_shm_fd, sizeof(int));
 
   // Map shared memory to process address space
-  producer_counter = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, p_shm_fd, 0);
-  if (producer_counter == MAP_FAILED)
+  producers_mem_ptr = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0);
+  if (producers_mem_ptr == MAP_FAILED)
   {
     perror("mmap");
     return 30;
@@ -193,9 +186,9 @@ void stop_consumer() {
   printf("Consumer %i: this consumer was blocked %f second(s)\n", getpid(), timeBlocked);
   printf("Consumer %i: this consumer was slept %f second(s)\n", getpid(), total_time_sleeping);
   printf("Consumer %i: this consumer read %d message(s)\n", getpid(), counter_read_messages);
-  printf("Consumer %i: there is/are %i consumer(s) alive\n", getpid(), * consumer_counter);
+  printf("Consumer %i: there is/are %i consumer(s) alive\n", getpid(), * consumers_mem_ptr);
   read_producer_counter();
-  printf("Consumer %i: there is/are %i producer(s) alive\n", getpid(), * producer_counter);
+  printf("Consumer %i: there is/are %i producer(s) alive\n", getpid(), * producers_mem_ptr);
   //close_semaphores();
   //close_shared_memory();
   sleep(1);
@@ -208,6 +201,10 @@ void initialize_buffer_semaphores() {
   //const char * sema2= "avail";
   //const char * sema3= "mutex";
 
+  char buffer_prime_name[256];
+  strcpy(buffer_prime_name, buffer_name);
+  strcat(buffer_prime_name, "_prime");
+
   int buffer_shm_fd; // Buffer (shared memory) file discriptor
 
   // Open the shared memory segment
@@ -215,12 +212,18 @@ void initialize_buffer_semaphores() {
   ftruncate(buffer_shm_fd, sizeof(struct circular_buf_t));
 
   // Now map the shared memory segment of the buffer in the address space of the process
-  shared_circular_buffer = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
+  buffer_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
+
+  buffer_shm_fd = shm_open(buffer_name, O_RDWR, 0666);
+
+  buffer_prime_shm_fd = shm_open(buffer_prime_name, O_CREAT | O_RDWR, 0666);
+  ftruncate(buffer_prime_shm_fd, buffer_mem_ptr->max * 256);
+  buffer_mem_ptr->buffer = mmap(NULL, buffer_mem_ptr->max * 256, PROT_READ | PROT_WRITE, MAP_SHARED, buffer_prime_shm_fd, 0);
 
   // Open semaphores
-  fill = sem_open(fill_sem_name, O_CREAT,0666,0);
-  avail = sem_open(avail_sem_name, O_CREAT, 0666, 3);
-  mutex = sem_open(mutex_sem_name,O_CREAT,0666,1);
+  fill_sem = sem_open(fill_sem_name, O_RDWR);
+  avail_sem = sem_open(avail_sem_name, O_RDWR);
+  mutex_sem = sem_open(mutex_sem_name, O_RDWR);
 
   //printf("Buffer semaphores have been initialized\n");
 }
@@ -234,26 +237,26 @@ void read_messages_from_buffer(double seconds_mean, char *data) {
 
   time_t beginSemaphore = time(NULL);
 
-  sem_wait(fill);
+  sem_wait(fill_sem);
 
   int sleepTime = ran_expo(seconds_mean);
   sleep(sleepTime);
 
-  sem_wait(mutex);
+  sem_wait(mutex_sem);
 
-  message_index = shared_circular_buffer->head;
-  circular_buf_get(shared_circular_buffer, data);
+  message_index = buffer_mem_ptr->head;
+  circular_buf_get(buffer_mem_ptr, data);
 
   printf("***************************************************\n");
   printf("Consumer %i: A message has been read\n", getpid());
   printf("Consumer %i: Message from buffer: %s\n", getpid(), data);
   printf("Consumer %i: Index of the message in the buffer: %i\n", getpid(), message_index);
-  printf("Consumer %i: there is/are %i consumer(s) alive\n", getpid(), * consumer_counter);
+  printf("Consumer %i: there is/are %i consumer(s) alive\n", getpid(), * consumers_mem_ptr);
   read_producer_counter();
-  printf("Consumer %i: there is/are %i producer(s) alive\n\n", getpid(), * producer_counter);
+  printf("Consumer %i: there is/are %i producer(s) alive\n\n", getpid(), * producers_mem_ptr);
 
-  sem_post(mutex);
-  sem_post(avail);
+  sem_post(mutex_sem);
+  sem_post(avail_sem);
 
   time_t endSemaphore = time(NULL);
   timeBlocked = timeBlocked + (endSemaphore - beginSemaphore) - sleepTime;

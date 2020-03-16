@@ -17,6 +17,7 @@ static const char * mutex_sem_name= "mutex";
 const char * NAME_MEMORY_SUSPEND = "SHARED_MEMORY_SUSPEND";
 
 static int buffer_shm_fd;   //shared memory file discriptor
+static int buffer_prime_shm_fd;   //shared memory file discriptor
 static int producers_shm_fd;
 static int consumers_shm_fd;
 
