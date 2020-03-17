@@ -111,6 +111,12 @@ int main(int argc, char *argv[]) {
   munmap(consumers_mem_ptr, sizeof(int));
   close(consumers_shm_fd);
 
+  munmap(shared_mem_ptr, sizeof(struct circular_buf_t));
+  close(shm_fd);
+
+  sem_close(avail);
+  sem_close(fill);
+  sem_close(mutex);
 
   exit(0);
 }
