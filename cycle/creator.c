@@ -48,32 +48,32 @@ int main(int argc, char *argv[])
   printf("buffer_size argument = %zu\n", buffer_size);
 
   //create the shared memory segment
-  if ((buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  if ((buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, 0666)) == -1)
   {
     fprintf(stderr, "Open failed:%s\n", strerror(errno));
     exit(1);
   }
 
-  if ((producers_shm_fd = shm_open(producers_mem_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  if ((producers_shm_fd = shm_open(producers_mem_name, O_CREAT | O_RDWR, 0666)) == -1)
   {
     fprintf(stderr, "Open failed:%s\n", strerror(errno));
     exit(1);
   }
 
-  if ((consumers_shm_fd = shm_open(consumers_mem_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  if ((consumers_shm_fd = shm_open(consumers_mem_name, O_CREAT | O_RDWR, 0666)) == -1)
   {
     fprintf(stderr, "Open failed:%s\n", strerror(errno));
     exit(1);
   }
 
-  if ((SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  if ((SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR, 0666)) == -1)
   {
     fprintf(stderr, "Open failed:%s\n", strerror(errno));
     exit(1);
   }
 
 
-  if ((total_messages_shm_fd = shm_open(total_messages_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  if ((total_messages_shm_fd = shm_open(total_messages_name, O_CREAT | O_RDWR, 0666)) == -1)
   {
     fprintf(stderr, "Open failed:%s\n", strerror(errno));
     exit(1);
@@ -128,19 +128,19 @@ int main(int argc, char *argv[])
   *SUSPEND = 1; //Enable creation of messages for producers
   /* creat/open semaphores*/
 
-  if ((fill_sem = sem_open(fill_sem_name, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED)
+  if ((fill_sem = sem_open(fill_sem_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED)
   {
     perror("sem_open");
     exit(1);
   }
 
-  if ((avail_sem = sem_open(avail_sem_name, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR, buffer_size)) == SEM_FAILED)
+  if ((avail_sem = sem_open(avail_sem_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR, buffer_size)) == SEM_FAILED)
   {
     perror("sem_open");
     exit(1);
   }
 
-  if ((mutex_sem = sem_open(mutex_sem_name, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED)
+  if ((mutex_sem = sem_open(mutex_sem_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED)
   {
     perror("sem_open");
     exit(1);
