@@ -16,11 +16,6 @@
 #include "../circular_buffer/circular_buffer.h"
 #include "../circular_buffer/circular_buffer.c"
 
-//#define CONSUMERS_SHARED_STORAGE_ID "/CONSUMERS_SHARED_MEMORY"
-//#define PRODUCERS_SHARED_STORAGE_ID "/p_mem"
-
-//const char special_message[] = "KILLER_MESSAGE_FROM_FINISHER"; // Special message that indicates the process must finisha
-
 const char * prod_counter_mutex= "/prod_counter_mutex";
 const char * con_counter_mutex = "/con_counter_mutex";
 
@@ -52,7 +47,6 @@ double total_time_sleeping = 0;
 void initialize_semaphores() {
   sem_con_producer_mutex = sem_open(prod_counter_mutex, O_CREAT, 0644, 1);
   sem_con_counter_mutex = sem_open(con_counter_mutex, O_CREAT, 0644, 1);
-  //printf("Semaphores have been initialized\n");
 }
 
 /**
@@ -142,8 +136,6 @@ int read_and_modify_consumer_counter(bool isIncrement) {
     return 30;
   }
 
-  //printf("PID %d: Read from shared memory: \"%d\"\n", pid, *consumer_counter);
-
   sem_wait(sem_con_counter_mutex);
   if(isIncrement) {
     (* consumer_counter)++;
@@ -151,7 +143,6 @@ int read_and_modify_consumer_counter(bool isIncrement) {
     (* consumer_counter)--;
   }
   sem_post(sem_con_counter_mutex);
-  //printf("consumer_counter has been increased/decreased\n");
 
   return 0;
 }
@@ -189,24 +180,17 @@ void stop_consumer() {
   read_and_modify_consumer_counter(false);
   printf("***************************************************\n");
   printf("Consumer %i: this consumer has been stopped\n", getpid());
-  //printf("Consumer %i: this consumer remained alive %ld second(s)\n", getpid(), (time(NULL) - begin));
   printf("Consumer %i: this consumer was blocked %f second(s)\n", getpid(), timeBlocked);
   printf("Consumer %i: this consumer was slept %f second(s)\n", getpid(), total_time_sleeping);
   printf("Consumer %i: this consumer read %d message(s)\n", getpid(), counter_read_messages);
   printf("Consumer %i: there is/are %i consumer(s) alive\n", getpid(), * consumer_counter);
   read_producer_counter();
   printf("Consumer %i: there is/are %i producer(s) alive\n", getpid(), * producer_counter);
-  //close_semaphores();
-  //close_shared_memory();
   sleep(1);
   exit(0);
 }
 
 void initialize_buffer_semaphores() {
-  //const char * name = "buffer";
-  //const char * sema1= "fill";
-  //const char * sema2= "avail";
-  //const char * sema3= "mutex";
 
   int buffer_shm_fd; // Buffer (shared memory) file discriptor
 
@@ -221,15 +205,12 @@ void initialize_buffer_semaphores() {
   fill = sem_open(fill_sem_name, O_RDWR);
   avail = sem_open(avail_sem_name, O_RDWR);
   mutex = sem_open(mutex_sem_name, O_RDWR);
-
-  //printf("Buffer semaphores have been initialized\n");
 }
 
 /**
 * Read messages from the buffer
 */
 void read_messages_from_buffer(double seconds_mean, char *data) {
-  //printf("I'm gonna try to read a message\n");
   int message_index = 0;
 
   time_t beginSemaphore = time(NULL);

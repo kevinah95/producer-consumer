@@ -38,7 +38,6 @@ double ran_expo(double lambda) {
 int main(int argc, char *argv[])
 {
   char *buffer_name = "shared_memory";
-  const char *p_mem = "p_mem";
   const char *sema1 = "fill";
   const char *sema2 = "avail";
   const char *sema3 = "mutex";

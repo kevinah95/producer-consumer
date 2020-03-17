@@ -63,7 +63,6 @@ int main(int argc, char *argv[]) {
   int shm_fd; //shared memory file discriptor
   struct circular_buf_t *shared_mem_ptr;
   sem_t *fill, *avail, *mutex;
-  const char *p_mem = "p_mem";
   const char *sema1 = "fill";
   const char *sema2 = "avail";
   const char *sema3 = "mutex";
@@ -91,7 +90,6 @@ int main(int argc, char *argv[]) {
     char s[256] ="";
     int charcheck = snprintf(s, 256 - 1, "KILLER_MESSAGE_FROM_FINISHER");
     circular_buf_put(shared_mem_ptr, s);
-    //print_buffer_status(shared_mem_ptr);
     sem_post(mutex);
     sem_post(fill);
   }
