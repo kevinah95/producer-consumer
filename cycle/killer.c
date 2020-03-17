@@ -102,19 +102,32 @@ int main(int argc, char *argv[]) {
 
   munmap(SUSPEND, sizeof(int));
   close(SHAREDM_FILEDESCRIPTOR_SUSPEND);
+  shm_unlink(NAME_MEMORY_SUSPEND);
 
   munmap(producers_mem_ptr, sizeof(int));
   close(producers_shm_fd);
+  shm_unlink(producers_mem_name);
 
   munmap(consumers_mem_ptr, sizeof(int));
   close(consumers_shm_fd);
+  shm_unlink(consumers_mem_name);
 
   munmap(shared_mem_ptr, sizeof(struct circular_buf_t));
   close(shm_fd);
+  shm_unlink(buffer_name);
+
+  munmap(total_messages, sizeof(int));
+  close(total_messages_shm_fd);
+  shm_unlink(total_messages_name);
 
   sem_close(avail);
   sem_close(fill);
   sem_close(mutex);
+  sem_unlink(sema1);
+  sem_unlink(sema2);
+  sem_unlink(sema3);
+
+
 
   exit(0);
 }
