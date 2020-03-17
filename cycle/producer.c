@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
     char s[256] ="";
     int charcheck = snprintf(s, 256 - 1, "%d-Date: %i/%i/%i Time: %i:%i:%i-%i\n",getpid(),year,month,day,hours,minutes,seconds,getRandomNumber());
-    printf("Inserting message in buffer at position %i. Producers: %i. Consumers:%i\n",shared_mem_ptr->head, *producers, *consumers);
+    printf("Inserting message in buffer at position %ld. Producers: %i. Consumers:%i\n",shared_mem_ptr->head, *producers, *consumers);
     circular_buf_put(shared_mem_ptr, s);
     totalMessages++;
     *total_messages = *total_messages + 1;
