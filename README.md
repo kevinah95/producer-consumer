@@ -9,11 +9,11 @@ It's responsible for creating the shared circular buffer, and to initialize all 
 
 Use the next command in order to run the Creator:
 ```bash
-./cycle/creator [-n buffer_name] [-s buffer_size]
+./cycle/creator [-n buffer_name] [-s buffer_size] &
 ```
 The value of `buffer_size` must be an integer. A specific example looks like this:
 ```bash
-./cycle/creator -n shm_shared_buffer -s 10
+./cycle/creator -n shm_shared_buffer -s 10 &
 ```
 
 ### Producer
@@ -30,11 +30,11 @@ The messages will look like this: `21412-Date: 2020/3/15 Time: 13:12:43-2`
 
 Use the next command in order to run the Producer:
 ```bash
-./cycle/producer [-n buffer_name] [-m mean_of_random_time]
+./cycle/producer [-n buffer_name] [-m mean_of_random_time] &
 ```
 The value of `buffer_name` must be the same used in the Creator. A specific example look like this:
 ```bash
-./cycle/producer -n shm_shared_buffer -m 1
+./cycle/producer -n shm_shared_buffer -m 1 &
 ```
 
 ### Consumer
@@ -42,11 +42,11 @@ It's a family of processes from the same implementation, they link to the buffer
 
 Use the next command in order to run the Consumer:
 ```bash
-./cycle/consumer [-n buffer_name] [-m mean_of_random_time]
+./cycle/consumer [-n buffer_name] [-m mean_of_random_time] &
 ```
 The value of `buffer_name` must be the same used in the Creator. A specific example look like this:
 ```bash
-./cycle/consumer -n shm_shared_buffer -m 1
+./cycle/consumer -n shm_shared_buffer -m 1 &
 ```
 
 ### Killer ☠️
@@ -54,12 +54,15 @@ Program that cancels all the processes by sending special messages to the Consum
 
 Use the next command in order to run the Killer:
 ```bash
-./cycle/killer [-n buffer_name]
+./cycle/killer [-n buffer_name] &
 ```
 The value of `buffer_name` must be the same used in the Creator. A specific example look like this:
 ```bash
-./cycle/killer -n shm_shared_buffer
+./cycle/killer -n shm_shared_buffer &
 ```
+
+### Note
+The `&` at the end of the commands is for returning the console after running the instruction.
 
 ## Confessions 🙈
 * The circular buffer was implement in a struct, it has a _well known_ size of 4096, however we simulate the action of setting the size of the buffer by the control provided by the semaphore, so for the user the buffer will have the size they set as long as it's not bigger than 4096. In fact, the index of written messages never is going to be bigger than size. 
