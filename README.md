@@ -61,7 +61,7 @@ The value of `buffer_name` must be the same used in the Creator. A specific exam
 ./cycle/killer -n shm_shared_buffer
 ```
 
-## Confessions
+## Confessions 🙈
 * The circular buffer was implement in a struct, it has a _well known_ size of 4096, however we simulate the action of setting the size of the buffer by the control provided by the semaphore, so for the user the buffer will have the size they set as long as it's not bigger than 4096. In fact, the index of written messages never is going to be bigger than size. 
 
 ## Developed by
