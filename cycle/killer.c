@@ -63,7 +63,6 @@ int main(int argc, char *argv[]) {
   int shm_fd; //shared memory file discriptor
   struct circular_buf_t *shared_mem_ptr;
   sem_t *fill, *avail, *mutex;
-  const char *p_mem = "p_mem";
   const char *sema1 = "fill";
   const char *sema2 = "avail";
   const char *sema3 = "mutex";
@@ -91,7 +90,6 @@ int main(int argc, char *argv[]) {
     char s[256] ="";
     int charcheck = snprintf(s, 256 - 1, "KILLER_MESSAGE_FROM_FINISHER");
     circular_buf_put(shared_mem_ptr, s);
-    //print_buffer_status(shared_mem_ptr);
     sem_post(mutex);
     sem_post(fill);
   }
@@ -104,19 +102,32 @@ int main(int argc, char *argv[]) {
 
   munmap(SUSPEND, sizeof(int));
   close(SHAREDM_FILEDESCRIPTOR_SUSPEND);
+  shm_unlink(NAME_MEMORY_SUSPEND);
 
   munmap(producers_mem_ptr, sizeof(int));
   close(producers_shm_fd);
+  shm_unlink(producers_mem_name);
 
   munmap(consumers_mem_ptr, sizeof(int));
   close(consumers_shm_fd);
+  shm_unlink(consumers_mem_name);
 
   munmap(shared_mem_ptr, sizeof(struct circular_buf_t));
   close(shm_fd);
+  shm_unlink(buffer_name);
+
+  munmap(total_messages, sizeof(int));
+  close(total_messages_shm_fd);
+  shm_unlink(total_messages_name);
 
   sem_close(avail);
   sem_close(fill);
   sem_close(mutex);
+  sem_unlink(sema1);
+  sem_unlink(sema2);
+  sem_unlink(sema3);
+
+
 
   exit(0);
 }
