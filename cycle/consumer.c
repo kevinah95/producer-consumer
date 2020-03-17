@@ -218,9 +218,9 @@ void initialize_buffer_semaphores() {
   shared_circular_buffer = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
 
   // Open semaphores
-  fill = sem_open(fill_sem_name, O_CREAT,0666,0);
-  avail = sem_open(avail_sem_name, O_CREAT, 0666, 3);
-  mutex = sem_open(mutex_sem_name,O_CREAT,0666,1);
+  fill = sem_open(fill_sem_name, O_RDWR);
+  avail = sem_open(avail_sem_name, O_RDWR);
+  mutex = sem_open(mutex_sem_name, O_RDWR);
 
   //printf("Buffer semaphores have been initialized\n");
 }

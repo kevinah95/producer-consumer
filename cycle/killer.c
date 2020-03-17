@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
   printf("Producers suspended...\n\n");
   while(*consumers_mem_ptr > 0){
     printf("%i consumers remaining...\n",*consumers_mem_ptr);
-    //sem_wait(avail);
+    sem_wait(avail);
 
     sem_wait(mutex);
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     circular_buf_put(shared_mem_ptr, s);
     //print_buffer_status(shared_mem_ptr);
     sem_post(mutex);
-    //sem_post(fill);
+    sem_post(fill);
   }
   sleep(2);
   sem_post(avail);
