@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     printf("%i consumers remaining...\n",*consumers_mem_ptr);
     sem_getvalue(avail, &val);
     sem_getvalue(fill, &val);
-    sem_wait(avail);
+    //sem_wait(avail);
 
     sem_getvalue(mutex, &val);
     //printf(" (sem_wait)semaphore mutex % d \n", val);
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     circular_buf_put(shared_mem_ptr, s);
     //print_buffer_status(shared_mem_ptr);
     sem_post(mutex);
-    sem_post(fill);
+    //sem_post(fill);
   }
   sleep(2);
   sem_post(avail);

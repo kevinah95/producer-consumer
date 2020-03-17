@@ -48,45 +48,106 @@ int main(int argc, char *argv[])
   printf("buffer_size argument = %zu\n", buffer_size);
 
   //create the shared memory segment
-  buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, 0666);
-  producers_shm_fd = shm_open(producers_mem_name, O_CREAT | O_RDWR, 0666);
-  consumers_shm_fd = shm_open(consumers_mem_name, O_CREAT | O_RDWR, 0666);
-  SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR, 0666);
-  total_messages_shm_fd = shm_open(total_messages_name, O_CREAT | O_RDWR, 0666);
+  if ((buffer_shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  {
+    fprintf(stderr, "Open failed:%s\n", strerror(errno));
+    exit(1);
+  }
+
+  if ((producers_shm_fd = shm_open(producers_mem_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  {
+    fprintf(stderr, "Open failed:%s\n", strerror(errno));
+    exit(1);
+  }
+
+  if ((consumers_shm_fd = shm_open(consumers_mem_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  {
+    fprintf(stderr, "Open failed:%s\n", strerror(errno));
+    exit(1);
+  }
+
+  if ((SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  {
+    fprintf(stderr, "Open failed:%s\n", strerror(errno));
+    exit(1);
+  }
+
+
+  if ((total_messages_shm_fd = shm_open(total_messages_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
+  {
+    fprintf(stderr, "Open failed:%s\n", strerror(errno));
+    exit(1);
+  }
+
+
 
   //configure the size of the shared memory segment
   ftruncate(buffer_shm_fd, sizeof(struct circular_buf_t));
   ftruncate(producers_shm_fd, sizeof(int));
   ftruncate(consumers_shm_fd, sizeof(int));
-  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
-  ftruncate(total_messages_shm_fd,sizeof(int));
+  ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND, sizeof(int));
+  ftruncate(total_messages_shm_fd, sizeof(int));
   //map the shared memory segment in process address space
-  buffer_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0);
-  producers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0);
-  consumers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumers_shm_fd, 0);
-  SUSPEND = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
-  total_messages = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, total_messages_shm_fd, 0);
+
+  if ((buffer_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, buffer_shm_fd, 0)) == MAP_FAILED)
+  {
+    fprintf(stderr, "mmap failed : %s\n",
+            strerror(errno));
+    exit(1);
+  }
+
+  if ((producers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, producers_shm_fd, 0)) == MAP_FAILED)
+  {
+    fprintf(stderr, "mmap failed : %s\n",
+            strerror(errno));
+    exit(1);
+  }
+
+  if ((consumers_mem_ptr = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumers_shm_fd, 0)) == MAP_FAILED)
+  {
+    fprintf(stderr, "mmap failed : %s\n",
+            strerror(errno));
+    exit(1);
+  }
+
+  if ((SUSPEND = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0)) == MAP_FAILED)
+  {
+    fprintf(stderr, "mmap failed : %s\n",
+            strerror(errno));
+    exit(1);
+  }
+
+  if ((total_messages = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, total_messages_shm_fd, 0)) == MAP_FAILED)
+  {
+    fprintf(stderr, "mmap failed : %s\n",
+            strerror(errno));
+    exit(1);
+  }
+
   *total_messages = 0;
   *SUSPEND = 1; //Enable creation of messages for producers
   /* creat/open semaphores*/
 
-  fill_sem = sem_open(fill_sem_name, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, 0);
+  if ((fill_sem = sem_open(fill_sem_name, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED)
+  {
+    perror("sem_open");
+    exit(1);
+  }
 
-  avail_sem = sem_open(avail_sem_name, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, buffer_size);
+  if ((avail_sem = sem_open(avail_sem_name, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR, buffer_size)) == SEM_FAILED)
+  {
+    perror("sem_open");
+    exit(1);
+  }
 
-  mutex_sem = sem_open(mutex_sem_name, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, 1);
+  if ((mutex_sem = sem_open(mutex_sem_name, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED)
+  {
+    perror("sem_open");
+    exit(1);
+  }
 
   buffer_mem_ptr->max = buffer_size;
   circular_buf_reset(buffer_mem_ptr);
-
-  sem_getvalue(fill_sem, &val);
-  printf(" (sem_wait) fill semaphore % d \n", val);
-
-  sem_getvalue(avail_sem, &val);
-  printf(" (sem_wait) avail semaphore % d \n", val);
-
-  sem_getvalue(mutex_sem, &val);
-  printf(" (sem_wait) semaphore mutex % d \n", val);
 
   free(buffer_name);
 
