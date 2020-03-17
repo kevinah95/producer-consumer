@@ -87,22 +87,25 @@ int main(int argc, char *argv[])
   p_shm_fd = shm_open(producers_mem_name, O_RDWR, 0666);
   consumer_shm_fd = shm_open(consumers_mem_name, O_RDWR, 0666);
   SHAREDM_FILEDESCRIPTOR_SUSPEND = shm_open(NAME_MEMORY_SUSPEND, O_RDWR, 0666);
+  total_messages_shm_fd = shm_open(total_messages_name, O_RDWR, 0666);
+
   //configure the size of the shared memory segment
   ftruncate(shm_fd, sizeof(struct circular_buf_t));
   ftruncate(p_shm_fd, sizeof(int));
   ftruncate(consumer_shm_fd, sizeof(int));
   ftruncate(SHAREDM_FILEDESCRIPTOR_SUSPEND,sizeof(int));
+  ftruncate(total_messages_shm_fd,sizeof(int));
   //map the shared memory segment in process address space
   shared_mem_ptr = mmap(0, sizeof(struct circular_buf_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
   producers = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, p_shm_fd, 0);
   consumers = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, consumer_shm_fd, 0);
+  total_messages = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, total_messages_shm_fd, 0);
   is_not_suspended = mmap(0,sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, SHAREDM_FILEDESCRIPTOR_SUSPEND, 0);
   /* creat/open semaphores*/
   //cook post semaphore fill after cooking a pizza
   fill = sem_open(sema1, O_RDWR);
   avail = sem_open(sema2, O_RDWR);
   mutex = sem_open(sema3, O_RDWR);
-
   //print_buffer_status(shared_mem_ptr);
   printf("\nProducer: I have started producing messages.\n");
   (* producers)++;
@@ -147,6 +150,7 @@ int main(int argc, char *argv[])
     printf("Inserting message in buffer at position %i. Producers: %i. Consumers:%i\n",shared_mem_ptr->head, *producers, *consumers);
     circular_buf_put(shared_mem_ptr, s);
     totalMessages++;
+    *total_messages = *total_messages + 1;
     //print_buffer_status(shared_mem_ptr);
     sem_post(mutex);
     sem_post(fill);
