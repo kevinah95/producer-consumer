@@ -61,8 +61,8 @@ The value of `buffer_name` must be the same used in the Creator. A specific exam
 ./cycle/killer -n shm_shared_buffer
 ```
 
-### Killer
-To make sure the program will run as expected, please remove the temporary files created in between executions with the following command:
-rm /dev/shm/*
+## Confessions
+* The circular buffer was implement in a struct, it has a _well known_ size of 4096, however we simulate the action of setting the size of the buffer by the control provided by the semaphore, so for the user the will have the size they set as long as it's not bigger than 4096.
+
 ## Developed by
 Kevin Hernández, [Steven Solano](https://github.com/solanors20), [Elisa Argueta](https://github.com/elisa7143), and [Jose Pablo Araya](https://github.com/arayajosepablo)
