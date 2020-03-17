@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
   sleep(2);
   sem_post(avail);
   sleep(3);
-  printf("\nTotal producers created: %i\n", totalProducers);
+  printf("\nTotal producers killed: %i\n", totalProducers);
   printf("Total consumers killed: %i\n", totalConsumers);
   printf("Total messages created: %i\n", *total_messages);
 
