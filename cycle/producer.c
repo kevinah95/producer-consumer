@@ -21,11 +21,11 @@ int *consumers;
 int totalMessages = 0;
 
 int getRandomNumber(){
-  int lower = 0, upper = 4; 
-  // Use current time as  
-  // seed for random generator 
-  srand(time(0)); 
-  int num = (rand() % (upper - lower + 1)) + lower; 
+  int lower = 0, upper = 4;
+  // Use current time as
+  // seed for random generator
+  srand(time(0));
+  int num = (rand() % (upper - lower + 1)) + lower;
   return num;
 }
 
@@ -79,7 +79,6 @@ int main(int argc, char *argv[])
   int p_shm_fd;
   int consumer_shm_fd;
   struct circular_buf_t *shared_mem_ptr;
-  int val;
   sem_t *fill, *avail, *mutex;
   /* make * shelf shared between processes*/
   //create the shared memory segment
@@ -110,10 +109,6 @@ int main(int argc, char *argv[])
   printf("\nProducer: I have started producing messages.\n");
   (* producers)++;
   while(*is_not_suspended > 0){
-    sem_getvalue(avail, &val);
-    //printf(" (sem_wait) avail semaphore % d \n", val);
-    sem_getvalue(fill, &val);
-    //printf(" (sem_wait) fill semaphore % d \n", val);
     time_t beginSemaphore = time(NULL);
     sem_wait(avail);
     time_t endSemaphore = time(NULL);
@@ -121,19 +116,16 @@ int main(int argc, char *argv[])
     int sleepTime = ran_expo(mediumConstant);
     timeWaiting = timeWaiting + sleepTime;
     sleep(sleepTime);
-
-    sem_getvalue(mutex, &val);
-    //printf(" (sem_wait)semaphore mutex % d \n", val);
     sem_wait(mutex);
     // time_t is arithmetic time type
     time_t now;
-    
+
     // Obtain current time
     // time() returns the current time of the system as a time_t value
     time(&now);
 
-    // localtime converts a time_t value to calendar time and 
-    // returns a pointer to a tm structure with its members 
+    // localtime converts a time_t value to calendar time and
+    // returns a pointer to a tm structure with its members
     // filled with the corresponding values
     struct tm *local = localtime(&now);
 

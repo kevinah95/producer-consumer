@@ -84,12 +84,8 @@ int main(int argc, char *argv[]) {
   printf("Producers suspended...\n\n");
   while(*consumers_mem_ptr > 0){
     printf("%i consumers remaining...\n",*consumers_mem_ptr);
-    sem_getvalue(avail, &val);
-    sem_getvalue(fill, &val);
     //sem_wait(avail);
 
-    sem_getvalue(mutex, &val);
-    //printf(" (sem_wait)semaphore mutex % d \n", val);
     sem_wait(mutex);
 
     char s[256] ="";
