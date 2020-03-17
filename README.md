@@ -61,5 +61,8 @@ The value of `buffer_name` must be the same used in the Creator. A specific exam
 ./cycle/killer -n shm_shared_buffer
 ```
 
+### Killer
+To make sure the program will run as expected, please remove the temporary files created in between executions with the following command:
+rm /dev/shm/*
 ## Developed by
 Kevin Hernández, [Steven Solano](https://github.com/solanors20), [Elisa Argueta](https://github.com/elisa7143), and [Jose Pablo Araya](https://github.com/arayajosepablo)
